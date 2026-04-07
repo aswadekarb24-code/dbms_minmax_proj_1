@@ -7,6 +7,32 @@
 BEGIN;
 
 -- ============================================================================
+-- 0. IDEMPOTENCY: Clean slate for re-runs
+-- ============================================================================
+
+DROP VIEW IF EXISTS View_Project_Coordinator_Analytics CASCADE;
+DROP VIEW IF EXISTS View_Institute_Cumulative_Revenue CASCADE;
+
+DROP TABLE IF EXISTS Distribution_Line_Items CASCADE;
+DROP TABLE IF EXISTS Distribution_Master CASCADE;
+DROP TABLE IF EXISTS Receipts CASCADE;
+DROP TABLE IF EXISTS Invoices CASCADE;
+DROP TABLE IF EXISTS Budget_Estimations CASCADE;
+DROP TABLE IF EXISTS Projects CASCADE;
+DROP TABLE IF EXISTS External_Agencies CASCADE;
+DROP TABLE IF EXISTS Clients CASCADE;
+DROP TABLE IF EXISTS Employees CASCADE;
+DROP TABLE IF EXISTS Departments CASCADE;
+DROP TABLE IF EXISTS Roles CASCADE;
+
+DROP TYPE IF EXISTS project_status CASCADE;
+DROP TYPE IF EXISTS invoice_type CASCADE;
+DROP TYPE IF EXISTS payee_type CASCADE;
+DROP TYPE IF EXISTS distribution_approval_status CASCADE;
+
+DROP FUNCTION IF EXISTS fn_set_updated_at() CASCADE;
+
+-- ============================================================================
 -- 1. ENUM TYPES
 -- ============================================================================
 
@@ -87,6 +113,7 @@ CREATE TABLE Employees (
     Full_Name       VARCHAR(200)    NOT NULL,
     Designation     VARCHAR(100)    NOT NULL,
     PDF_Balance     DECIMAL(15,2)   NOT NULL DEFAULT 0.00,
+    Email           VARCHAR(254)    NOT NULL UNIQUE,
     Auth_Hash       VARCHAR(512)    NOT NULL,
 
     Created_At      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -127,12 +154,15 @@ CREATE TABLE Clients (
     Contact_Person_Name     VARCHAR(200)    NOT NULL,
     Contact_Number          VARCHAR(20)     NOT NULL,
     Contact_Email           VARCHAR(254)    NOT NULL,
-    GSTIN_UIN               VARCHAR(15)     NULL,
+    GSTIN_UIN               VARCHAR(25)     NULL,
     State_Name              VARCHAR(100)    NOT NULL,
-    State_Code              VARCHAR(10)     NOT NULL,
+    State_Code              VARCHAR(25)     NOT NULL,
+    Auth_Hash               VARCHAR(512)    NOT NULL,
 
     Created_At              TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    Updated_At              TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+    Updated_At              TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_client_email UNIQUE (Contact_Email)
 );
 
 
