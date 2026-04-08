@@ -8,6 +8,7 @@ class FacultySignup(BaseModel):
     department_id: int
     role_id: int
     designation: str
+    profile_url: Optional[str] = None
 
 class ClientSignup(BaseModel):
     organization_name: str
@@ -36,6 +37,7 @@ class EmployeeResponse(BaseModel):
     Email: str
     PDF_Balance: float
     Role_Name: str
+    Profile_URL: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -48,3 +50,9 @@ class ClientResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+class FacultySettingsUpdate(BaseModel):
+    old_password: str
+    name: Optional[str] = None
+    profile_url: Optional[str] = None
+    new_password: Optional[str] = None

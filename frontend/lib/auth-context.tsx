@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from './api';
 
-type UserType = 'COLLEGE_OFFICIAL' | 'ORGANIZATION' | null;
+type UserType = 'COLLEGE_OFFICIAL' | 'ORGANIZATION' | 'ADMIN' | null;
 type RoleType = 'DIRECTOR' | 'HOD' | 'PROJECT_COORDINATOR' | 'SUPPORT_STAFF';
 
 interface AuthUser {
@@ -14,6 +14,7 @@ interface AuthUser {
   PDF_Balance?: number;
   Role_Name?: RoleType;
   Email?: string;
+  Profile_URL?: string | null;
   // Client fields
   Client_ID?: number;
   Organization_Name?: string;
@@ -33,8 +34,10 @@ interface AuthContextType {
   loading: boolean;
   loginFaculty: (email: string, password: string) => Promise<void>;
   loginClient: (email: string, password: string) => Promise<void>;
+  loginAdmin: (password: string) => Promise<void>;
   signupFaculty: (data: Record<string, unknown>) => Promise<void>;
   signupClient: (data: Record<string, unknown>) => Promise<void>;
+  updateUser: (updated: Partial<AuthUser>) => void;
   logout: () => void;
 }
 
@@ -45,8 +48,10 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   loginFaculty: async () => {},
   loginClient: async () => {},
+  loginAdmin: async () => {},
   signupFaculty: async () => {},
   signupClient: async () => {},
+  updateUser: () => {},
   logout: () => {},
 });
 
@@ -106,6 +111,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setRole(null);
   };
 
+  const loginAdmin = async (password: string) => {
+    // Admin login using username "admin@internal.tpqa" and the provided static password
+    const res = await api.post('/api/auth/login/admin', { email: 'admin@internal.tpqa', password });
+    const { access_token, user_type, user: userData } = res.data;
+
+    localStorage.setItem('access_token', access_token);
+    localStorage.setItem('user_type', user_type);
+    localStorage.setItem('user_data', JSON.stringify(userData));
+
+    setUserType(user_type);
+    setUser(userData);
+    setRole(null);
+  };
+
   const signupFaculty = async (data: Record<string, unknown>) => {
     const res = await api.post('/api/auth/signup/faculty', data);
     const { access_token, user_type } = res.data;
@@ -134,6 +153,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem('user_data');
   };
 
+  const updateUser = (updated: Partial<AuthUser>) => {
+    setUser(prev => {
+      const merged = { ...prev, ...updated };
+      localStorage.setItem('user_data', JSON.stringify(merged));
+      return merged;
+    });
+  };
+
   return (
     <AuthContext.Provider value={{
       userType,
@@ -142,8 +169,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       loading,
       loginFaculty,
       loginClient,
+      loginAdmin,
       signupFaculty,
       signupClient,
+      updateUser,
       logout: handleLogout
     }}>
       {children}

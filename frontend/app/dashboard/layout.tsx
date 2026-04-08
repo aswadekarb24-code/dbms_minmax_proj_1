@@ -2,13 +2,16 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useRouter, usePathname } from "next/navigation";
-import { Building2, FileText, GraduationCap, LayoutDashboard, LogOut, Receipt } from "lucide-react";
+import { Building2, FileText, GraduationCap, LayoutDashboard, LogOut, Receipt, User } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { SettingsModal } from "@/components/modals/SettingsModal";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { userType, user, role, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Wait for auth to load
   if (loading) {
@@ -33,17 +36,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navItems = userType === 'COLLEGE_OFFICIAL' 
     ? [
         { name: 'Dashboard', href: '/dashboard/college', icon: LayoutDashboard },
-        { name: 'Projects', href: '#', icon: FileText },
-        { name: 'Receipts & Dist.', href: '#', icon: Receipt },
+        { name: 'Projects', href: '/dashboard/college', icon: FileText },
+        { name: 'Receipts & Dist.', href: '/dashboard/college', icon: Receipt },
       ]
-    : [
+    : userType === 'ADMIN'
+      ? [
+          { name: 'Admin Dashboard', href: '/dashboard/admin', icon: LayoutDashboard },
+        ]
+      : [
         { name: 'Dashboard', href: '/dashboard/organization', icon: LayoutDashboard },
-        { name: 'My Requests', href: '#', icon: FileText },
+        { name: 'My Requests', href: '/dashboard/organization', icon: FileText },
       ];
 
   const NameDisplay = userType === 'COLLEGE_OFFICIAL' 
     ? user?.Full_Name || 'Faculty'
-    : user?.Organization_Name || 'Organization';
+    : userType === 'ADMIN'
+      ? 'Super Admin'
+      : user?.Organization_Name || 'Organization';
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row">
@@ -76,8 +85,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <div className="p-4 border-t border-slate-800">
           <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-brand-400">
-              {userType === 'COLLEGE_OFFICIAL' ? <UserIcon/> : <Building2 className="w-5 h-5" />}
+            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-brand-400 overflow-hidden relative">
+              {userType === 'COLLEGE_OFFICIAL' && user?.Profile_URL ? (
+                <img 
+                  src={user.Profile_URL} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.parentElement?.querySelector('.sidebar-icon-fallback')?.classList.remove('hidden');
+                  }}
+                />
+              ) : null}
+              <div className={`sidebar-icon-fallback ${userType === 'COLLEGE_OFFICIAL' && user?.Profile_URL ? 'hidden' : ''}`}>
+                {userType === 'COLLEGE_OFFICIAL' ? <UserIcon/> : <Building2 className="w-5 h-5" />}
+              </div>
             </div>
             <div className="overflow-hidden">
               <p className="text-sm font-medium truncate">{NameDisplay}</p>
@@ -100,6 +123,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <h2 className="text-lg font-semibold text-slate-800 dark:text-white capitalize">
             {pathname.split('/').pop()}
           </h2>
+          {userType === 'COLLEGE_OFFICIAL' && (
+            <button 
+              onClick={() => setIsSettingsOpen(true)}
+              className="relative w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 hover:border-brand-500 transition-all shadow-sm overflow-hidden flex items-center justify-center cursor-pointer group"
+            >
+              {user?.Profile_URL ? (
+                <img 
+                  src={user.Profile_URL} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.parentElement?.classList.add('fallback-shown');
+                  }}
+                />
+              ) : null}
+              <User className={`w-6 h-6 text-slate-400 absolute ${user?.Profile_URL ? 'hidden [.fallback-shown_&]:block' : 'block'}`} />
+            </button>
+          )}
         </header>
 
         <div className="flex-1 overflow-auto p-6 md:p-8">
@@ -108,6 +151,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </div>
       </main>
+
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+      />
     </div>
   );
 }

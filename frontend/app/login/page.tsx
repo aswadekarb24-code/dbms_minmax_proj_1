@@ -49,12 +49,20 @@ export default function LoginLanding() {
           </Link>
         </div>
 
-        <p className="mt-10 text-sm text-slate-500 dark:text-slate-400">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-brand-600 dark:text-brand-400 font-medium hover:underline">
-            Sign up
-          </Link>
-        </p>
+        <div className="mt-10 space-y-4 text-sm text-slate-500 dark:text-slate-400">
+          <p>
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="text-brand-600 dark:text-brand-400 font-medium hover:underline">
+              Sign up
+            </Link>
+          </p>
+          <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
+            <Link href="/admin" className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors flex items-center justify-center gap-1">
+              <Building2 className="w-3 h-3" />
+              Administrative Access
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

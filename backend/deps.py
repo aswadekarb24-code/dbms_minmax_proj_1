@@ -29,3 +29,12 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         return {"user": user, "user_type": user_type}
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
+
+def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        payload = decode_access_token(credentials.credentials)
+        if payload.get("user_type") != "ADMIN":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized as admin")
+        return {"user_type": "ADMIN"}
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")

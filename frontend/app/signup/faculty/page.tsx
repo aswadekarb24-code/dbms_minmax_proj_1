@@ -14,6 +14,7 @@ export default function FacultySignupPage() {
   const [departmentId, setDepartmentId] = useState("");
   const [roleId, setRoleId] = useState("");
   const [designation, setDesignation] = useState("");
+  const [profileUrl, setProfileUrl] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<{ Department_ID: number; Department_Name: string }[]>([]);
@@ -55,6 +56,7 @@ export default function FacultySignupPage() {
         department_id: parseInt(departmentId),
         role_id: parseInt(roleId),
         designation,
+        profile_url: profileUrl || null,
       });
       // After signup, login to get full user data
       await loginFaculty(email, password);
@@ -111,6 +113,10 @@ export default function FacultySignupPage() {
                   <option key={r.Role_ID} value={r.Role_ID}>{r.Role_Name.replace(/_/g, ' ')}</option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Profile Image URL (Optional)</label>
+              <input type="url" value={profileUrl} onChange={(e) => setProfileUrl(e.target.value)} placeholder="https://example.com/avatar.png" className="w-full px-3 py-2 text-sm border rounded-lg bg-transparent dark:border-slate-600 primary-ring" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>

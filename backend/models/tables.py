@@ -27,6 +27,7 @@ class Employee(Base):
     PDF_Balance = Column("pdf_balance", Numeric(15, 2), default=0.00, nullable=False)
     Email = Column("email", String(254), nullable=False, unique=True)
     Auth_Hash = Column("auth_hash", String(512), nullable=False)
+    Profile_URL = Column("profile_url", String(255), nullable=True)
     Created_At = Column("created_at", DateTime, default=func.now(), nullable=False)
     Updated_At = Column("updated_at", DateTime, default=func.now(), onupdate=func.now(), nullable=False)
     

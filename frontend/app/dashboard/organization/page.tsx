@@ -6,6 +6,7 @@ import { ArrowRight, FileText, CheckCircle, Receipt } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { ProjectStatus } from "@/lib/types";
+import { CreateRequestModal } from "@/components/workflow/modals/StepModals";
 
 interface ProjectData {
   Project_ID: number;
@@ -19,13 +20,29 @@ export default function OrganizationDashboard() {
   const { user } = useAuth();
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
-  useEffect(() => {
+  const fetchProjects = () => {
+    setLoading(true);
     api.get("/api/consultancy/projects")
       .then((res) => setProjects(res.data))
       .catch(() => setProjects([]))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchProjects();
   }, []);
+
+  const handleCreateRequest = async (data: any) => {
+    try {
+      await api.post("/api/consultancy/request", data);
+      setIsModalOpen(false);
+      fetchProjects();
+    } catch (e) {
+      alert("Failed to create request");
+    }
+  };
 
   if (!user || !('Organization_Name' in user)) return null;
 
@@ -63,6 +80,9 @@ export default function OrganizationDashboard() {
       <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Your Consultancy Requests</h2>
+          <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg">
+            New Request
+          </button>
         </div>
         <div className="overflow-x-auto">
           {loading ? (
@@ -112,6 +132,7 @@ export default function OrganizationDashboard() {
           )}
         </div>
       </div>
+      <CreateRequestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleCreateRequest} />
     </>
   );
 }

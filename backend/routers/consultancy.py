@@ -1,9 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from core.database import get_db
-from models.tables import Project, BudgetEstimation, Invoice, Receipt, DistributionMaster, Department, Role
-from schemas.project import ProjectCreate, ProjectResponse
+from models.tables import Project, Department, Role
+from schemas.project import (
+    ProjectCreate, ProjectResponse, Step2FacultyResponse, Step3AgencyAcceptance,
+    Step4DirectorApproval, Step5Proforma, Step6TaxReceipt, Step7Completion,
+    Step8Distribution, Step9Close
+)
 from deps import get_current_user
+
+# Import step handlers
+from consultancy_steps.step_1_request import process_request
+from consultancy_steps.step_2_response import process_response
+from consultancy_steps.step_3_acceptance import process_acceptance
+from consultancy_steps.step_4_approval import process_approval
+from consultancy_steps.step_5_proforma import process_proforma
+from consultancy_steps.step_6_tax import process_tax
+from consultancy_steps.step_7_completion import process_completion
+from consultancy_steps.step_8_distribution import process_distribution
+from consultancy_steps.step_9_close import process_close
 
 router = APIRouter(prefix="/api/consultancy", tags=["consultancy"])
 
@@ -42,84 +57,36 @@ def get_project(project_id: int, db: Session = Depends(get_db), current_user: di
 
 @router.post("/request")
 def step1_request(project_data: ProjectCreate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    user_type = current_user["user_type"]
-    user = current_user["user"]
-    if user_type != "ORGANIZATION":
-        raise HTTPException(status_code=403, detail="Only organizations can request projects")
-    
-    # Needs a unique project number
-    num_projects = db.query(Project).count()
-    project_number = f"REQ-2026-{num_projects + 1:03d}"
-    
-    new_project = Project(
-        Project_Number=project_number,
-        Client_ID=user.Client_ID,
-        Department_ID=1, # Default or chosen by UI
-        Coordinator_ID=1, # Placeholder ID
-        Project_Title=project_data.Project_Title,
-        Current_Status="REQUEST_BY_EXTERNAL_ORG",
-        Est_Person_Days=project_data.Est_Person_Days,
-        Contract_Period=project_data.Contract_Period,
-        Liability_Period=project_data.Liability_Period
-    )
-    db.add(new_project)
-    db.commit()
-    db.refresh(new_project)
-    return new_project
+    return process_request(project_data, db, current_user)
 
 @router.post("/{project_id}/faculty-response")
-def step2_faculty_response(project_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    # ... placeholder for step 2 ...
-    project = db.query(Project).filter(Project.Project_ID == project_id).first()
-    project.Current_Status = "AGENCY_ACCEPTANCE"
-    db.commit()
-    return {"status": "success", "project_status": project.Current_Status}
+def step2_faculty_response(project_id: int, payload: Step2FacultyResponse, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    return process_response(project_id, payload, db, current_user)
 
 @router.post("/{project_id}/agency-acceptance")
-def step3_agency_acceptance(project_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    project = db.query(Project).filter(Project.Project_ID == project_id).first()
-    project.Current_Status = "DIRECTOR_APPROVAL"
-    db.commit()
-    return {"status": "success", "project_status": project.Current_Status}
+def step3_agency_acceptance(project_id: int, payload: Step3AgencyAcceptance, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    return process_acceptance(project_id, payload, db, current_user)
 
 @router.post("/{project_id}/director-approval")
-def step4_director_approval(project_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    project = db.query(Project).filter(Project.Project_ID == project_id).first()
-    project.Current_Status = "PROFORMA_INVOICE"
-    db.commit()
-    return {"status": "success", "project_status": project.Current_Status}
+def step4_director_approval(project_id: int, payload: Step4DirectorApproval, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    return process_approval(project_id, payload, db, current_user)
 
 @router.post("/{project_id}/proforma-invoice")
-def step5_proforma(project_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    project = db.query(Project).filter(Project.Project_ID == project_id).first()
-    project.Current_Status = "TAX_INVOICE_AND_RECEIPT"
-    db.commit()
-    return {"status": "success", "project_status": project.Current_Status}
+def step5_proforma(project_id: int, payload: Step5Proforma, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    return process_proforma(project_id, payload, db, current_user)
 
 @router.post("/{project_id}/tax-invoice-receipt")
-def step6_tax_receipt(project_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    project = db.query(Project).filter(Project.Project_ID == project_id).first()
-    project.Current_Status = "COMPLETION_REPORTS"
-    db.commit()
-    return {"status": "success", "project_status": project.Current_Status}
+def step6_tax_receipt(project_id: int, payload: Step6TaxReceipt, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    return process_tax(project_id, payload, db, current_user)
 
 @router.post("/{project_id}/completion-report")
-def step7_completion_report(project_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    project = db.query(Project).filter(Project.Project_ID == project_id).first()
-    project.Current_Status = "AMOUNT_DISTRIBUTION"
-    db.commit()
-    return {"status": "success", "project_status": project.Current_Status}
+def step7_completion_report(project_id: int, payload: Step7Completion, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    return process_completion(project_id, payload, db, current_user)
 
 @router.post("/{project_id}/distribution")
-def step8_distribution(project_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    project = db.query(Project).filter(Project.Project_ID == project_id).first()
-    project.Current_Status = "CLOSED"
-    db.commit()
-    return {"status": "success", "project_status": project.Current_Status}
+def step8_distribution(project_id: int, payload: Step8Distribution, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    return process_distribution(project_id, payload, db, current_user)
 
 @router.post("/{project_id}/close")
-def step9_closing(project_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    project = db.query(Project).filter(Project.Project_ID == project_id).first()
-    project.Current_Status = "CLOSED"
-    db.commit()
-    return {"status": "success", "project_status": project.Current_Status}
+def step9_closing(project_id: int, payload: Step9Close, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    return process_close(project_id, payload, db, current_user)

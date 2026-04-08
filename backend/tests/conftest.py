@@ -55,7 +55,29 @@ def client():
 
 @pytest.fixture
 def faculty_token(client):
-    """Register and login a faculty user, return the JWT."""
+    """Register and login a faculty user, return the JWT.
+
+    This fixture is defensive: if the test user already exists in the test DB
+    we generate a token directly instead of failing the signup/login calls.
+    It also ensures Department 1 has an HOD assigned (used by step-1 tests).
+    """
+    from core.security import create_access_token
+    from models.tables import Employee, Department
+
+    db = TestingSessionLocal()
+    existing = db.query(Employee).filter(Employee.Email == "testfaculty@test.com").first()
+    if existing:
+        # ensure department HOD is set
+        dept = db.query(Department).filter(Department.Department_ID == 1).first()
+        if dept and not dept.HOD_Employee_ID:
+            dept.HOD_Employee_ID = existing.Employee_ID
+            db.commit()
+        token = create_access_token(subject=existing.Employee_ID, user_type="COLLEGE_OFFICIAL")
+        db.close()
+        return token
+
+    db.close()
+    # create via API (normal flow)
     client.post("/api/auth/signup/faculty", json={
         "full_name": "Test Faculty",
         "email": "testfaculty@test.com",
@@ -68,11 +90,36 @@ def faculty_token(client):
         "email": "testfaculty@test.com",
         "password": "testpass123"
     })
-    return res.json()["access_token"]
+    token = res.json()["access_token"]
+    # Ensure the department has an HOD/coordinator assigned for tests that expect one
+    try:
+        employee_id = res.json().get("user", {}).get("Employee_ID")
+        if employee_id:
+            db = TestingSessionLocal()
+            dept = db.query(Department).filter(Department.Department_ID == 1).first()
+            if dept and not dept.HOD_Employee_ID:
+                dept.HOD_Employee_ID = employee_id
+                db.commit()
+            db.close()
+    except Exception:
+        pass
+
+    return token
 
 @pytest.fixture
 def client_token(client):
     """Register and login a client user, return the JWT."""
+    from core.security import create_access_token
+    from models.tables import Client
+
+    db = TestingSessionLocal()
+    existing = db.query(Client).filter(Client.Contact_Email == "testclient@test.com").first()
+    if existing:
+        token = create_access_token(subject=existing.Client_ID, user_type="ORGANIZATION")
+        db.close()
+        return token
+    db.close()
+
     client.post("/api/auth/signup/client", json={
         "organization_name": "Test Corp",
         "contact_person_name": "John Doe",
@@ -96,3 +143,35 @@ def auth_headers_faculty(faculty_token):
 @pytest.fixture
 def auth_headers_client(client_token):
     return {"Authorization": f"Bearer {client_token}"}
+
+@pytest.fixture
+def director_token(client):
+    """Register and login a director user, return the JWT."""
+    from core.security import create_access_token
+    from models.tables import Employee
+
+    db = TestingSessionLocal()
+    existing = db.query(Employee).filter(Employee.Email == "director@test.com").first()
+    if existing:
+        token = create_access_token(subject=existing.Employee_ID, user_type="COLLEGE_OFFICIAL")
+        db.close()
+        return token
+    db.close()
+
+    client.post("/api/auth/signup/faculty", json={
+        "full_name": "Test Director",
+        "email": "director@test.com",
+        "password": "testpass123",
+        "department_id": 1,
+        "role_id": 1,  # DIRECTOR
+        "designation": "Director"
+    })
+    res = client.post("/api/auth/login/faculty", json={
+        "email": "director@test.com",
+        "password": "testpass123"
+    })
+    return res.json()["access_token"]
+
+@pytest.fixture
+def auth_headers_director(director_token):
+    return {"Authorization": f"Bearer {director_token}"}
