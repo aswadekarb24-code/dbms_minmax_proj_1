@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, Boolean, Date, ForeignKey, DateTime, func, CheckConstraint
+from sqlalchemy import Column, Integer, String, Numeric, Boolean, Date, ForeignKey, DateTime, func, CheckConstraint, Enum as SAEnum
 from sqlalchemy.orm import relationship
 from core.database import Base
 
@@ -147,7 +147,25 @@ class DistributionLineItem(Base):
     __tablename__ = "distribution_line_items"
     Line_Item_ID = Column("line_item_id", Integer, primary_key=True, index=True)
     Dist_Master_ID = Column("dist_master_id", Integer, ForeignKey("distribution_master.dist_master_id"), nullable=False)
-    Payee_Type = Column("payee_type", String, nullable=False)
+    # Map to the PostgreSQL enum type `payee_type`. Use SQLAlchemy Enum with
+    # `create_type=False` so we don't attempt to create the enum in DB migrations
+    # (the type already exists in production schema). This keeps inserts/casts
+    # correct on Postgres while remaining portable for tests.
+    Payee_Type = Column(
+        "payee_type",
+        SAEnum(
+            'DIRECTOR',
+            'HOD',
+            'PROJECT_COORDINATOR',
+            'SUPPORT_STAFF',
+            'EXTERNAL_AGENCY',
+            'OFFICE_SHARE',
+            'PDF',
+            name='payee_type',
+            create_type=False
+        ),
+        nullable=False
+    )
     Employee_ID = Column("employee_id", Integer, ForeignKey("employees.employee_id"), nullable=True)
     Ext_Agency_ID = Column("ext_agency_id", Integer, ForeignKey("external_agencies.ext_agency_id"), nullable=True)
     Percentage_Rule = Column("percentage_rule", Numeric(5, 2), default=0.00, nullable=False)

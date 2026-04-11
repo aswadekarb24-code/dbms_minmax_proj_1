@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from models.tables import Project, DistributionMaster, DistributionLineItem, Receipt, Invoice
+from models.tables import Project, DistributionMaster, DistributionLineItem, Receipt, Invoice,Employee
 from schemas.project import Step8Distribution
 
 def process_distribution(project_id: int, payload: Step8Distribution, db: Session, current_user: dict):
@@ -25,6 +25,9 @@ def process_distribution(project_id: int, payload: Step8Distribution, db: Sessio
     inst_pool = total_dist_amt * 0.3
 
     sum_allocations = sum([float(i.Allocated_Amt) for i in payload.distributions])
+    # print(sum_allocations, total_dist_amt)
+    # print(payload.distributions)
+    # print(len(payload.distributions))
     if abs(sum_allocations - total_dist_amt) > 0.01:
          raise HTTPException(status_code=400, detail=f"Allocations ({sum_allocations}) do not match total amount ({total_dist_amt})")
 
@@ -40,10 +43,26 @@ def process_distribution(project_id: int, payload: Step8Distribution, db: Sessio
     db.flush()
 
     for item in payload.distributions:
+        # Resolve/validate employee id
+        emp_id = item.Employee_ID
+        # print([e.Employee_ID for e in db.query(Employee).all()])
+        # If coordinator expected but no Employee_ID provided, default to project's coordinator
+        if (emp_id is None or emp_id == 0) and item.Payee_Type == "PROJECT_COORDINATOR":
+            emp_id = project.Coordinator_ID
+        # If an employee id is provided, ensure it exists
+        if emp_id is not None:
+            emp = db.query(Employee).filter(Employee.Employee_ID == emp_id).first()
+            if not emp:
+                emp_id = project.Coordinator_ID if item.Payee_Type == "PROJECT_COORDINATOR" else None
+                emp = db.query(Employee).filter(Employee.Employee_ID == emp_id).first()
+            if not emp:
+                raise HTTPException(status_code=400, detail=f"Employee {emp_id} not found for payee {item.Payee_Type}")
+        # print(emp_id)
+         # get all employee id column
         line_item = DistributionLineItem(
             Dist_Master_ID=master.Dist_Master_ID,
             Payee_Type=item.Payee_Type,
-            Employee_ID=item.Employee_ID,
+            Employee_ID=emp_id,
             Percentage_Rule=0.0, # optional per business logic
             Allocated_Amt=item.Allocated_Amt
         )
