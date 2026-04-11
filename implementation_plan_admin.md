@@ -6,9 +6,11 @@ Based on your request, we will skip the automated `seed.py` and build a dedicate
 
 > [!WARNING]
 > According to your `tpqa_schema.sql`, **every** Employee (including the Director) MUST have a `Department_ID` (`NOT NULL`). Therefore, when adding the Director, the backend will automatically create an "Administration" department to attach them to, unless you prefer explicitly typing a department name for the Director as well. Please confirm if creating an implicit "Administration" department for the Director is acceptable.
+Response : YEs it is admissible as long as you sanitise in backend/frontend that only the director is part of this department.
 
-## Proposed Changes
-
+## Proposed Changes 
+Comment
+ : Proceed, it is correct
 ### 1. Admin Authentication & Dashboard
 - **Backend**: Create `POST /api/auth/login/admin` in `routers/auth.py` that bypasses normal auth and returns a JWT with `user_type: "ADMIN"` if the password is `"123976"`.
 - **Frontend**: 
