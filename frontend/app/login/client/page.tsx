@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { Building2, Lock, Mail } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function ClientLoginPage() {
   const [email, setEmail] = useState("");
@@ -32,11 +33,17 @@ export default function ClientLoginPage() {
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
       {/* Left Panel - Branding */}
-      <div className="hidden md:flex flex-col justify-center items-center bg-slate-900 text-white p-12 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
-        <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-emerald-500 rounded-full blur-[100px] opacity-40"></div>
+      <div className="hidden md:flex flex-col justify-center items-center bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-white p-12 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
+        <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-gold-500 rounded-full blur-[100px] opacity-25"></div>
         <div className="z-10 text-center max-w-md">
-          <Building2 className="w-24 h-24 mx-auto mb-8 text-emerald-400" />
+          <Image
+            src="/vjti.jpg"
+            alt="VJTI Logo"
+            width={120}
+            height={120}
+            className="mx-auto mb-8 rounded-full shadow-2xl border-4 border-white/20"
+          />
           <h1 className="text-4xl font-bold mb-4 tracking-tight">Organization Portal</h1>
           <p className="text-slate-300 text-lg">Track your consultancy requests and audit project progress.</p>
         </div>
@@ -45,6 +52,9 @@ export default function ClientLoginPage() {
       {/* Right Panel - Login Form */}
       <div className="flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950">
         <div className="w-full max-w-md glass-panel p-8 rounded-2xl shadow-xl">
+          <div className="md:hidden flex justify-center mb-6">
+            <Image src="/vjti.jpg" alt="VJTI Logo" width={64} height={64} className="rounded-full shadow-lg" />
+          </div>
           <h2 className="text-2xl font-semibold mb-2 text-slate-800 dark:text-white">Organization Sign In</h2>
           <p className="text-slate-500 dark:text-slate-400 mb-8">Enter your registered contact email and password.</p>
 
@@ -92,7 +102,7 @@ export default function ClientLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg transition-colors flex justify-center items-center gap-2 disabled:opacity-50"
+              className="w-full bg-gold-600 hover:bg-gold-500 text-white font-medium py-2.5 rounded-lg transition-colors flex justify-center items-center gap-2 disabled:opacity-50"
             >
               <Building2 className="h-5 w-5" />
               {loading ? "Signing in..." : "Sign In as Client"}
@@ -101,7 +111,7 @@ export default function ClientLoginPage() {
 
           <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
             Don&apos;t have an account?{" "}
-            <Link href="/signup/client" className="text-emerald-600 dark:text-emerald-400 font-medium hover:underline">
+            <Link href="/signup/client" className="text-gold-600 dark:text-gold-400 font-medium hover:underline">
               Register Organization
             </Link>
           </p>

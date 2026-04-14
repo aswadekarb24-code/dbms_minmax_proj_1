@@ -7,7 +7,7 @@ def test_signup_faculty_success(client):
         "full_name": "Dr. Auth Test",
         "email": "authtest_faculty@test.com",
         "password": "securepass",
-        "department_id": 1,
+        "department_id": 2,
         "role_id": 3,
         "designation": "Associate Professor"
     })
@@ -23,7 +23,7 @@ def test_signup_faculty_duplicate_email(client):
         "full_name": "Duplicate Faculty",
         "email": "duplicate_faculty@test.com",
         "password": "pass",
-        "department_id": 1,
+        "department_id": 2,
         "role_id": 3,
         "designation": "Prof"
     }
@@ -57,7 +57,7 @@ def test_login_faculty_success(client):
         "full_name": "Login Test",
         "email": "logintest_fac@test.com",
         "password": "mypassword",
-        "department_id": 1,
+        "department_id": 2,
         "role_id": 2,
         "designation": "HOD"
     })
@@ -77,7 +77,7 @@ def test_login_faculty_wrong_password(client):
         "full_name": "Wrong Pass",
         "email": "wrongpass@test.com",
         "password": "correctpass",
-        "department_id": 1,
+        "department_id": 2,
         "role_id": 3,
         "designation": "Prof"
     })

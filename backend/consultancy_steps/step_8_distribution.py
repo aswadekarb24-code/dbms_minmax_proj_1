@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from models.tables import Project, DistributionMaster, DistributionLineItem, Receipt, Invoice,Employee
+from models.tables import Project, DistributionMaster, DistributionLineItem, Receipt, Invoice, Employee
 from schemas.project import Step8Distribution
 
 def process_distribution(project_id: int, payload: Step8Distribution, db: Session, current_user: dict):
@@ -24,10 +24,12 @@ def process_distribution(project_id: int, payload: Step8Distribution, db: Sessio
     staff_pool = total_dist_amt * 0.7
     inst_pool = total_dist_amt * 0.3
 
+    # Input validation: all allocations must be positive
+    for item in payload.distributions:
+        if item.Allocated_Amt <= 0:
+            raise HTTPException(status_code=400, detail=f"Allocation amount must be positive, got {item.Allocated_Amt}")
+
     sum_allocations = sum([float(i.Allocated_Amt) for i in payload.distributions])
-    # print(sum_allocations, total_dist_amt)
-    # print(payload.distributions)
-    # print(len(payload.distributions))
     if abs(sum_allocations - total_dist_amt) > 0.01:
          raise HTTPException(status_code=400, detail=f"Allocations ({sum_allocations}) do not match total amount ({total_dist_amt})")
 
@@ -45,7 +47,6 @@ def process_distribution(project_id: int, payload: Step8Distribution, db: Sessio
     for item in payload.distributions:
         # Resolve/validate employee id
         emp_id = item.Employee_ID
-        # print([e.Employee_ID for e in db.query(Employee).all()])
         # If coordinator expected but no Employee_ID provided, default to project's coordinator
         if (emp_id is None or emp_id == 0) and item.Payee_Type == "PROJECT_COORDINATOR":
             emp_id = project.Coordinator_ID
@@ -57,16 +58,25 @@ def process_distribution(project_id: int, payload: Step8Distribution, db: Sessio
                 emp = db.query(Employee).filter(Employee.Employee_ID == emp_id).first()
             if not emp:
                 raise HTTPException(status_code=400, detail=f"Employee {emp_id} not found for payee {item.Payee_Type}")
-        # print(emp_id)
-         # get all employee id column
+
+        # Calculate percentage rule dynamically
+        pct_rule = round((float(item.Allocated_Amt) / total_dist_amt) * 100, 2) if total_dist_amt > 0 else 0.0
+
         line_item = DistributionLineItem(
             Dist_Master_ID=master.Dist_Master_ID,
             Payee_Type=item.Payee_Type,
             Employee_ID=emp_id,
-            Percentage_Rule=0.0, # optional per business logic
+            Percentage_Rule=pct_rule,
             Allocated_Amt=item.Allocated_Amt
         )
         db.add(line_item)
+
+        # Update PDF_Balance for PDF type line items — 10% of allocation goes to coordinator's balance
+        if item.Payee_Type == "PDF":
+            coordinator = db.query(Employee).filter(Employee.Employee_ID == project.Coordinator_ID).first()
+            if coordinator:
+                pdf_increment = round(float(item.Allocated_Amt) * 0.10, 2)
+                coordinator.PDF_Balance = float(coordinator.PDF_Balance or 0) + pdf_increment
 
     project.Current_Status = "AMOUNT_DISTRIBUTION"
     db.commit()

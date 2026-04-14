@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from datetime import date
 from core.database import get_db
 from models.tables import Project
 from schemas.project import ProjectCreate, ProjectResponse
@@ -32,7 +33,8 @@ def process_request(project_data: ProjectCreate, db: Session, current_user: dict
         Current_Status="REQUEST_BY_EXTERNAL_ORG",
         Est_Person_Days=project_data.Est_Person_Days,
         Contract_Period=project_data.Contract_Period,
-        Liability_Period=project_data.Liability_Period
+        Liability_Period=project_data.Liability_Period,
+        Start_Date=date.today(),
     )
     db.add(new_project)
     db.commit()

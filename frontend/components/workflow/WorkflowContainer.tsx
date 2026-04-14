@@ -111,10 +111,11 @@ export function WorkflowContainer({ project, onUpdateStatus }: { project: Projec
         };
       case 'CLOSED':
         return {
-           title: "Project Closed",
-           desc: "This consultancy workflow is complete and archived.",
+           title: "✅ Project Completed",
+           desc: "This consultancy workflow has been successfully completed and archived. All steps are finalized.",
            canAction: false,
-           actionText: ""
+           actionText: "",
+           isClosed: true
         };
     }
   };
@@ -143,9 +144,14 @@ export function WorkflowContainer({ project, onUpdateStatus }: { project: Projec
            >
              {loading ? 'Processing...' : stepInfo.actionText}
            </button>
+        ) : (stepInfo as any).isClosed ? (
+           <div className="px-4 py-2 shrink-0 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 rounded-lg text-sm font-medium flex items-center gap-2">
+             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+             All Steps Completed
+           </div>
         ) : (
-           <div className="px-4 py-2 shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-lg text-sm font-medium">
-             Waiting on other party ({project.Current_Status === 'CLOSED' ? 'Finished' : (userType === 'ORGANIZATION' ? 'Faculty' : 'Client/Org')})
+           <div className="px-4 py-2 shrink-0 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 rounded-lg text-sm font-medium">
+             Awaiting action from {userType === 'ORGANIZATION' ? 'Faculty/Director' : 'Organization'}
            </div>
         )}
       </div>

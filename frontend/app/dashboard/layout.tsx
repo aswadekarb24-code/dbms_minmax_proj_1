@@ -2,8 +2,9 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useRouter, usePathname } from "next/navigation";
-import { Building2, FileText, GraduationCap, LayoutDashboard, LogOut, Receipt, User } from "lucide-react";
+import { Building2, FileText, LayoutDashboard, LogOut, Receipt, User } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { SettingsModal } from "@/components/modals/SettingsModal";
 
@@ -59,8 +60,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar */}
       <aside className="w-full md:w-64 bg-slate-900 text-white flex flex-col">
         <div className="p-6 border-b border-slate-800 flex items-center gap-3">
-          <GraduationCap className="w-8 h-8 text-brand-400" />
-          <span className="font-bold text-xl tracking-tight">TPQA Platform</span>
+          <Image src="/vjti.jpg" alt="VJTI" width={36} height={36} className="rounded-full border border-brand-500/40" />
+          <span className="font-bold text-xl tracking-tight">VJTI Consultancy</span>
         </div>
         
         <nav className="flex-1 p-4 space-y-1">
@@ -104,7 +105,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <div className="overflow-hidden">
               <p className="text-sm font-medium truncate">{NameDisplay}</p>
-              <p className="text-xs text-brand-400 truncate">{role || 'Client'}</p>
+              <p className="text-xs text-gold-400 truncate">{role || 'Client'}</p>
             </div>
           </div>
           <button 

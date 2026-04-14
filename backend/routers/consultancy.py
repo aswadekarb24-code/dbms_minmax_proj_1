@@ -19,6 +19,7 @@ from consultancy_steps.step_6_tax import process_tax
 from consultancy_steps.step_7_completion import process_completion
 from consultancy_steps.step_8_distribution import process_distribution
 from consultancy_steps.step_9_close import process_close
+from consultancy_steps.step_revert import process_revert
 
 router = APIRouter(prefix="/api/consultancy", tags=["consultancy"])
 
@@ -90,3 +91,7 @@ def step8_distribution(project_id: int, payload: Step8Distribution, db: Session 
 @router.post("/{project_id}/close")
 def step9_closing(project_id: int, payload: Step9Close, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     return process_close(project_id, payload, db, current_user)
+
+@router.post("/{project_id}/revert")
+def revert_step(project_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    return process_revert(project_id, db, current_user)

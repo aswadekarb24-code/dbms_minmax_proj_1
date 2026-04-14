@@ -8,7 +8,15 @@ def process_tax(project_id: int, payload: Step6TaxReceipt, db: Session, current_
     user_type = current_user["user_type"]
     if user_type != "COLLEGE_OFFICIAL":
         raise HTTPException(status_code=403, detail="Only faculty can log tax receipt")
-        
+
+    # Input sanitization
+    if payload.Total_Received <= 0:
+        raise HTTPException(status_code=400, detail="Total received must be greater than zero")
+    if payload.TDS_Deducted < 0:
+        raise HTTPException(status_code=400, detail="TDS deducted cannot be negative")
+    if payload.TDS_Deducted > payload.Total_Received:
+        raise HTTPException(status_code=400, detail="TDS deducted cannot exceed total received")
+
     project = db.query(Project).filter(Project.Project_ID == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -26,13 +34,18 @@ def process_tax(project_id: int, payload: Step6TaxReceipt, db: Session, current_
         Invoice_Type="TAX_INVOICE",
         Invoice_Number=f"TI-{date.today().year}-{project_id}",
         Invoice_Date=date.today(),
+        Buyer_Order_No=proforma.Buyer_Order_No or f"BO-{project_id}",
+        Destination=proforma.Destination or "VJTI, Matunga, Mumbai-400019",
+        Payment_Terms=proforma.Payment_Terms or "Due on Receipt",
         HSN_SAC_Code=proforma.HSN_SAC_Code,
         Taxable_Value=proforma.Taxable_Value,
         Tax_Amount=proforma.Tax_Amount,
-        Total_Amount=proforma.Total_Amount
+        Total_Amount=proforma.Total_Amount,
+        Inst_PAN=proforma.Inst_PAN or "AAATV0127F",
+        Bank_Account_No=proforma.Bank_Account_No or "VJTI-ACC-001",
     )
     db.add(tax_invoice)
-    db.flush() # to get tax_invoice.Invoice_ID
+    db.flush()  # to get tax_invoice.Invoice_ID
 
     receipt = Receipt(
         Invoice_ID=tax_invoice.Invoice_ID,

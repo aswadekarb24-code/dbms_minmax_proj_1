@@ -126,6 +126,27 @@ def login_admin(request: LoginRequest):
         }
     }
 
+@router.get("/faculty/profile")
+def get_faculty_profile(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    if current_user["user_type"] != "COLLEGE_OFFICIAL":
+        raise HTTPException(status_code=403, detail="Only faculty can view profile")
+    
+    employee = current_user["user"]
+    dept_name = employee.department.Department_Name if employee.department else "Unknown"
+    role_name = employee.role.Role_Name if employee.role else "Unknown"
+    
+    return {
+        "Employee_ID": employee.Employee_ID,
+        "Full_Name": employee.Full_Name,
+        "Email": employee.Email,
+        "Designation": employee.Designation,
+        "Department_Name": dept_name,
+        "Role_Name": role_name,
+        "PDF_Balance": float(employee.PDF_Balance) if employee.PDF_Balance else 0.00,
+        "Profile_URL": employee.Profile_URL,
+        "Created_At": str(employee.Created_At) if employee.Created_At else None,
+    }
+
 @router.put("/faculty/settings")
 def update_faculty_settings(payload: FacultySettingsUpdate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     if current_user["user_type"] != "COLLEGE_OFFICIAL":

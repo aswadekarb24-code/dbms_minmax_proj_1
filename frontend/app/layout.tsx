@@ -9,8 +9,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "TPQA Management System",
-  description: "Academic Consultancy & Third-Party Quality Audit Management System",
+  title: "VJTI TPQA Management System",
+  description: "Veermata Jijabai Technological Institute — Academic Consultancy & Third-Party Quality Audit Management",
 };
 
 export default function RootLayout({
