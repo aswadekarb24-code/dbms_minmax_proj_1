@@ -1,0 +1,7 @@
+.~lock*
+*.sql
+implementation_plan_admin.md
+implementation_plan_settings.md
+task_admin.md
+walkthrough.md
+walkthrough_settings.md
