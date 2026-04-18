@@ -240,7 +240,7 @@ pytest tests/ -v --tb=short
 
 ---
 
-For a deep dive into the architecture, data strategy, and API specifications, please refer to [Project Report](Project_Report_TPQA.docx). Detailed Documentation on [Drive](https://drive.google.com/drive/folders/1VvMn4G4r0XPNNq21LW2HyvIDxr0jT4ej?usp=sharing).
+For a deep dive into the architecture, data strategy, and API specifications, please refer to [Project Report](Project_Report_TPQA.pdf). Detailed Documentation on [Drive](https://drive.google.com/drive/folders/1VvMn4G4r0XPNNq21LW2HyvIDxr0jT4ej?usp=sharing).
 
 ## License
 
