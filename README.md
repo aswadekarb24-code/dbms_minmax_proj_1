@@ -207,6 +207,8 @@ pytest tests/ -v --tb=short
 | `JWT_SECRET` | Secret key for signing JWTs | `your-secure-random-string` |
 | `JWT_ALGORITHM` | JWT signing algorithm | `HS256` |
 | `JWT_EXPIRE_MINUTES` | Token expiry in minutes | `1440` |
+| `SUPABASE_DB_PASSWORD`| Supabase DB Password | `your-password` |
+| `SUPABASE_REF` | Supabase Project Reference | `your-project-reference` |
 
 ### Frontend (`frontend/.env.local`)
 | Variable | Description | Default |
@@ -240,4 +242,4 @@ pytest tests/ -v --tb=short
 
 ## License
 
-Academic project — DBMS Mini/Max Project 1.
+Academic project — DBMS Semester Grade Project.
